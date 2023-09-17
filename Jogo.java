@@ -75,8 +75,84 @@ public class Jogo {
 						}
 					}
 					break;
+				case SOLUCAO_AUTOMATICA:
+					realizarSolucaoAutomatica();
 			}
 		} while (!opcaoSelecionada.equals(opcaoMenu.SAIR));
+	}
+	
+	// Esta solução só funciona no início do jogo por enquanto
+	private void realizarSolucaoAutomatica() {
+		Empilhar(torre1, torre3, 1);
+		
+		boolean isMovidoDiscoAlvoTorre1;
+		while (!torre1.estaVazia()) {
+			if (topoTorre1EhMenorTopoTorre3()) {
+				Empilhar(torre1, torre3, 1);
+			} else {
+				isMovidoDiscoAlvoTorre1 = false;
+				for (int i = 1; !isMovidoDiscoAlvoTorre1; i++) {
+					Empilhar(torre3, torre2, i);
+					if (torre3.estaVazia() || topoTorre1EhMenorTopoTorre3()) {
+						Empilhar(torre1, torre3, 1);
+						isMovidoDiscoAlvoTorre1 = true;
+					}
+					Empilhar(torre2, torre3, i);
+				}
+			}
+		}
+	}
+	
+	private boolean topoTorre1EhMenorTopoTorre3() {
+		return torre1.getTopo().getDado() < torre3.getTopo().getDado();
+	}
+	
+	// Somente chamar se: ao remover os elementos movimentados
+	// os topos das pilhas sejam menores que eles.
+	private void Empilhar(PilhaDinamica pilhaOrigem, 
+			PilhaDinamica pilhaDestino, int numeroDiscosMovimentarPilhaOrigem) {
+		if (numeroDiscosMovimentarPilhaOrigem == 1) {
+			No discoMovimentado = pilhaOrigem.getTopo();
+			pilhaOrigem.remover();
+			pilhaDestino.inserir(discoMovimentado);
+			imprimirTorres();
+			qtdJogadas++;
+			imprimirQtdJogadas();
+		} else {
+			PilhaDinamica pilhaAuxiliar = buscarPilhaAuxiliar(pilhaOrigem, pilhaDestino);
+			if (numeroDiscosMovimentarPilhaOrigem == 2) {
+				Empilhar(pilhaOrigem, pilhaAuxiliar, 1);
+				Empilhar(pilhaOrigem, pilhaDestino, 1);
+				Empilhar(pilhaAuxiliar, pilhaDestino, 1);
+			} else {
+				Empilhar(pilhaOrigem, pilhaAuxiliar, numeroDiscosMovimentarPilhaOrigem - 1);
+				Empilhar(pilhaOrigem, pilhaDestino, 1);
+				Empilhar(pilhaAuxiliar, pilhaDestino, numeroDiscosMovimentarPilhaOrigem - 1);
+			}
+		}
+	}
+	
+	private PilhaDinamica buscarPilhaAuxiliar(PilhaDinamica pilhaOrigem, 
+			PilhaDinamica pilhaDestino) {
+		if (pilhaOrigem == torre1) {
+			if (pilhaDestino == torre2) {
+				return torre3;
+			} else { // pilhaDestino == 3
+				return torre2;
+			}
+		} else if (pilhaOrigem == torre2) {
+			if (pilhaDestino == torre1) {
+				return torre3;
+			} else { // pilhaDestino == 3
+				return torre1;
+			}
+		} else { // pilhaOrigem == 3
+			if (pilhaDestino == torre1) {
+				return torre2;
+			} else { // pilhaDestino == 2
+				return torre1;
+			}
+		}
 	}
 	
 	private void imprimirQtdJogadas() {
