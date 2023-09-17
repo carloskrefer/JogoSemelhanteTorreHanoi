@@ -101,7 +101,9 @@ public class Jogo {
 	
 	private boolean validarOpcaoSelecionada(String[] opcoesValidas, String opcaoSelecionada) {
 		for (int i = 0; i < opcoesValidas.length; i++) {
-			if (opcaoSelecionada.equals(opcoesValidas[i])) {
+			if (opcoesValidas[i] == null) {
+				continue;
+			} else if (opcaoSelecionada.equals(opcoesValidas[i])) {
 				return true;
 			}
 		}
@@ -114,7 +116,15 @@ public class Jogo {
 	}
 	
 	private OpcaoFimJogo selecionarOpcaoFimJogo() {
-		return OpcaoFimJogo.values()[Integer.parseInt(scanner.nextLine())];
+		String opcaoSelecionada;
+		boolean isEntradaValida;
+		
+		do {
+			opcaoSelecionada = scanner.nextLine();
+			isEntradaValida = validarOpcaoSelecionada(new String[] {"0", "1"}, opcaoSelecionada);
+		} while (!isEntradaValida);
+		
+		return OpcaoFimJogo.values()[Integer.parseInt(opcaoSelecionada)];
 	}
 	
 	private void limparMemoriaJogoAnterior() {
@@ -260,11 +270,13 @@ public class Jogo {
 	
 	private void iniciarMovimento() {
 		System.out.println("\nSelecione a torre a desempilhar.");
-		imprimirOpcoesTorres();
-		No discoSelecionado = selecionarTorre().remover();
+		imprimirOpcoesTorresDesempilhar();
+		PilhaDinamica torreDesejaDesempilhar = selecionarTorreDesempilhar();
 		System.out.println("\nSeleciona a torre a empilhar o disco " +
-				discoSelecionado.getDado() + ".");
-		selecionarTorre().inserir(discoSelecionado);
+				torreDesejaDesempilhar.getTopo().getDado() + ".");
+		imprimirOpcoesTorresEmpilhar(torreDesejaDesempilhar);
+		PilhaDinamica torreDesejaEmpilhar = selecionarTorreEmpilhar(torreDesejaDesempilhar);
+		torreDesejaEmpilhar.inserir(torreDesejaDesempilhar.remover());
 	}
 	
 	private boolean verificarSeTorreEstaOrdenada(PilhaDinamica torre) {
@@ -321,26 +333,117 @@ public class Jogo {
 		}
 	}
 	
-	private void imprimirOpcoesTorres() {
-		System.out.print((torre1.estaVazia()) ? "" : "1 - Torre 1\n");
-		System.out.print((torre2.estaVazia()) ? "" : "2 - Torre 2\n");
-		System.out.print((torre3.estaVazia()) ? "" : "3 - Torre 3\n");
-		if (torre1.estaVazia() && torre2.estaVazia() && torre3.estaVazia()) {
-			System.out.println("Não há opções para seleção de torres, pois estão todas vazias.");
-		}
-		System.out.println();
+	private void imprimirOpcoesTorresDesempilhar() {
+		boolean isPermitidoDesempilharTorre1 = verificarPermissaoParaDesempilharTorre(torre1);
+		boolean isPermitidoDesempilharTorre2 = verificarPermissaoParaDesempilharTorre(torre2);
+		boolean isPermitidoDesempilharTorre3 = verificarPermissaoParaDesempilharTorre(torre3);
+		
+		System.out.print(isPermitidoDesempilharTorre1 ? "1 - Torre 1\n" : "");
+		System.out.print(isPermitidoDesempilharTorre2 ? "2 - Torre 2\n" : "");
+		System.out.print(isPermitidoDesempilharTorre3 ? "3 - Torre 3\n" : "");
 	}
 	
-	private PilhaDinamica selecionarTorre() {
-		int numTorreEscolhida = Integer.parseInt(scanner.nextLine());
+	private void imprimirOpcoesTorresEmpilhar(PilhaDinamica torreSelecionadaParaDesempilhar) {
 		
-		switch (numTorreEscolhida) {
-			case 1:
-				return torre1;
-			case 2:
-				return torre2;
-			default:
-				return torre3;
+		boolean isPermitidoEmpilharTorre1 = verificarPermissaoParaEmpilharEmTorre(
+				torreSelecionadaParaDesempilhar, torre1);
+		boolean isPermitidoEmpilharTorre2 = verificarPermissaoParaEmpilharEmTorre(
+				torreSelecionadaParaDesempilhar, torre2);
+		boolean isPermitidoEmpilharTorre3 = verificarPermissaoParaEmpilharEmTorre(
+				torreSelecionadaParaDesempilhar, torre3);
+		
+		System.out.print(isPermitidoEmpilharTorre1 ? "1 - Torre 1\n" : "");
+		System.out.print(isPermitidoEmpilharTorre2 ? "2 - Torre 2\n" : "");
+		System.out.print(isPermitidoEmpilharTorre3 ? "3 - Torre 3\n" : "");
+	}
+	
+	private boolean verificarPermissaoParaEmpilharEmTorre(PilhaDinamica torreQueDesejaDesempilhar, 
+			PilhaDinamica torreQueDesejaEmpilhar) {
+		
+		if (torreQueDesejaEmpilhar.estaVazia()) {
+			return true;
+		} else {
+			if (isObjetivoOrdemCrescente) {
+				return torreQueDesejaDesempilhar.getTopo().getDado() <= 
+						torreQueDesejaEmpilhar.getTopo().getDado();
+			} else {
+				return torreQueDesejaDesempilhar.getTopo().getDado() >= 
+						torreQueDesejaEmpilhar.getTopo().getDado();
+			}
+		}
+		
+	}
+	
+	private boolean verificarPermissaoParaDesempilharTorre(PilhaDinamica torreQueDesejaDesempilhar) {
+		return torreQueDesejaDesempilhar.getTamanho() != 0;
+	}
+	
+	private PilhaDinamica selecionarTorreEmpilhar(PilhaDinamica torreQueDesejaDesempilhar) {
+		String opcaoSelecionada;
+		PilhaDinamica torreQueDesejaEmpilhar = torre1;
+		boolean isEntradaValida;
+		boolean isPermitidoEmpilharNaTorreSelecionada = false;
+				
+		do {
+			opcaoSelecionada = scanner.nextLine();
+			
+			isEntradaValida = validarOpcaoSelecionada(new String[] {"1", "2", "3"}, opcaoSelecionada);
+			
+			if (isEntradaValida) {
+				if (opcaoSelecionada.equals("1")) {
+					torreQueDesejaEmpilhar = torre1;
+				} else if (opcaoSelecionada.equals("2")) {
+					torreQueDesejaEmpilhar = torre2;
+				} else {
+					torreQueDesejaEmpilhar = torre3;
+				}
+				
+				isPermitidoEmpilharNaTorreSelecionada = verificarPermissaoParaEmpilharEmTorre(
+						torreQueDesejaDesempilhar, torreQueDesejaEmpilhar);
+				
+				if (!isPermitidoEmpilharNaTorreSelecionada) {
+					System.out.println("Opção selecionada não existe! Tente novamente.");
+					isEntradaValida = false;
+				} else {
+					return torreQueDesejaEmpilhar;
+				}
+			}
+			
+		} while (!isEntradaValida);
+
+		return torreQueDesejaEmpilhar;
+	}
+	
+	private PilhaDinamica selecionarTorreDesempilhar() {
+		String opcaoSelecionada;
+		boolean isEntradaValida;
+		String[] opcoesValidas = new String[3];
+		
+		boolean isPermitidoDesempilharTorre1 = verificarPermissaoParaDesempilharTorre(torre1);
+		boolean isPermitidoDesempilharTorre2 = verificarPermissaoParaDesempilharTorre(torre2);
+		boolean isPermitidoDesempilharTorre3 = verificarPermissaoParaDesempilharTorre(torre3);
+		
+		if (isPermitidoDesempilharTorre1) {
+			opcoesValidas[0] = "1";
+		}
+		if (isPermitidoDesempilharTorre2) {
+			opcoesValidas[1] = "2";
+		}
+		if (isPermitidoDesempilharTorre3) {
+			opcoesValidas[2] = "3";
+		}
+		
+		do {
+			opcaoSelecionada = scanner.nextLine();
+			isEntradaValida = validarOpcaoSelecionada(opcoesValidas, opcaoSelecionada);
+		} while (!isEntradaValida);
+		
+		if (opcaoSelecionada.equals("1")) {
+			return torre1;
+		} else if (opcaoSelecionada.equals("2")) {
+			return torre2;
+		} else {
+			return torre3;
 		}
 	}
 	
