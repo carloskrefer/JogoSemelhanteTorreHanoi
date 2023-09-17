@@ -1,3 +1,12 @@
+/*
+ * Aluno: Carlos Eduardo Krefer
+ * Curso: Engenharia de Software
+ * Turno: Diurno
+ * Matéria: Resolução de Problemas Estruturados em Computação
+ * Atividade: TDE 02
+ * Data: 17/09/2023
+ */
+
 import java.util.Random;
 import java.util.Scanner;
 
@@ -72,6 +81,7 @@ public class Jogo {
 	
 	private void imprimirMensagemBoasVindas() {
 		System.out.println("\nBem-vindo ao jogo semelhante à Torre de Hanói.\n");
+		System.out.println("***Importante: só é possível selecionar a solução automática na primeira jogada!***\n");
 	}
 	
 	private int selecionarQtdDiscos() {
@@ -180,24 +190,30 @@ public class Jogo {
 					}
 					break;
 				case SOLUCAO_AUTOMATICA:
-					realizarSolucaoAutomatica();
+					if (isObjetivoOrdemCrescente) {
+						realizarSolucaoAutomaticaParaOrdemCrescente();
+					} else {
+						realizarSolucaoAutomaticaParaOrdemDecrescente();
+					}
+					System.out.println("Fim da resolução automática. O total de "
+							+ "passos automáticos foi " + qtdJogadas + ".");
+					return;
 			}
 		} while (!opcaoSelecionada.equals(OpcaoMenu.SAIR_JOGO_ATUAL));
 	}
 	
-	// Esta solução só funciona no início do jogo por enquanto
-	private void realizarSolucaoAutomatica() {
+	private void realizarSolucaoAutomaticaParaOrdemCrescente() {
 		Empilhar(torre1, torre3, 1);
 		
 		boolean isMovidoDiscoAlvoTorre1;
 		while (!torre1.estaVazia()) {
-			if (topoTorre1EhMenorTopoTorre3()) {
+			if (topoTorre1EhMenorOuIgualTopoTorre3()) {
 				Empilhar(torre1, torre3, 1);
 			} else {
 				isMovidoDiscoAlvoTorre1 = false;
 				for (int i = 1; !isMovidoDiscoAlvoTorre1; i++) {
 					Empilhar(torre3, torre2, i);
-					if (torre3.estaVazia() || topoTorre1EhMenorTopoTorre3()) {
+					if (torre3.estaVazia() || topoTorre1EhMenorOuIgualTopoTorre3()) {
 						Empilhar(torre1, torre3, 1);
 						isMovidoDiscoAlvoTorre1 = true;
 					}
@@ -207,8 +223,34 @@ public class Jogo {
 		}
 	}
 	
-	private boolean topoTorre1EhMenorTopoTorre3() {
-		return torre1.getTopo().getDado() < torre3.getTopo().getDado();
+	// Só muda a chamada do topoTorre1EhMenorOuIgualTopoTorre3 para topoTorre1EhMaiorOuIgualTopoTorre3.
+	private void realizarSolucaoAutomaticaParaOrdemDecrescente() {
+		Empilhar(torre1, torre3, 1);
+		
+		boolean isMovidoDiscoAlvoTorre1;
+		while (!torre1.estaVazia()) {
+			if (topoTorre1EhMaiorOuIgualTopoTorre3()) {
+				Empilhar(torre1, torre3, 1);
+			} else {
+				isMovidoDiscoAlvoTorre1 = false;
+				for (int i = 1; !isMovidoDiscoAlvoTorre1; i++) {
+					Empilhar(torre3, torre2, i);
+					if (torre3.estaVazia() || topoTorre1EhMaiorOuIgualTopoTorre3()) {
+						Empilhar(torre1, torre3, 1);
+						isMovidoDiscoAlvoTorre1 = true;
+					}
+					Empilhar(torre2, torre3, i);
+				}
+			}
+		}
+	}
+	
+	private boolean topoTorre1EhMenorOuIgualTopoTorre3() {
+		return torre1.getTopo().getDado() <= torre3.getTopo().getDado();
+	}
+	
+	private boolean topoTorre1EhMaiorOuIgualTopoTorre3() {
+		return torre1.getTopo().getDado() >= torre3.getTopo().getDado();
 	}
 	
 	// Somente chamar se: ao remover os elementos movimentados
