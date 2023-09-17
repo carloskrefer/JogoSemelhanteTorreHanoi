@@ -9,6 +9,7 @@ public class Jogo {
 	private PilhaDinamica torre1;
 	private PilhaDinamica torre2;
 	private PilhaDinamica torre3;
+	private int qtdJogadas;
 	
 	enum opcaoMenu {
 		SAIR, MOVIMENTAR, SOLUCAO_AUTOMATICA
@@ -19,10 +20,11 @@ public class Jogo {
 		torre1 = new PilhaDinamica();
 		torre2 = new PilhaDinamica();
 		torre3 = new PilhaDinamica();
+		qtdJogadas = 0;
 	}
 	
 	public void iniciarNovoJogo() {
-		System.out.println("Bem-vindo ao jogo Torre de Hanói.\n\n"
+		System.out.println("Bem-vindo ao jogo semelhante à Torre de Hanói.\n\n"
 				+ "Informe a quantidade de discos: ");
 		qtdDiscos = Integer.parseInt(scanner.nextLine());
 		inserirDiscosAleatorios(qtdDiscos, torre1);
@@ -31,7 +33,7 @@ public class Jogo {
 				+ "0 - Ordenar de maneira crescente\n"
 				+ "1 - Ordenar de maneira decrescente");
 		isObjetivoOrdemCrescente = (scanner.nextLine().equals("0")) ? true : false;
-		iniciarSelecaoOpcoes();
+		iniciarLoopSelecaoOpcoes();
 	}
 	
 	private void inserirDiscosAleatorios(int qtdDiscos, PilhaDinamica torreAlvo) {
@@ -44,13 +46,132 @@ public class Jogo {
 		return new Random().nextInt(limiteSuperiorInclusivo + 1);
 	}
 	
-	private void iniciarSelecaoOpcoes() {
+	private void iniciarLoopSelecaoOpcoes() {
 		opcaoMenu opcaoSelecionada;
+		boolean existeAlgumaTorreCheia;
+		boolean torreEstaOrdenada = false;
 		do {
+			System.out.println();
+			imprimirTorres();
+			imprimirQtdJogadas();
+			System.out.println();
 			imprimirOpcoesMenu();
 			opcaoSelecionada = selecionarOpcao();
-			
+			switch (opcaoSelecionada) {
+				case SAIR:
+					return;
+				case MOVIMENTAR:
+					qtdJogadas++;
+					iniciarMovimento();
+					PilhaDinamica torreCheia = buscarTorreCheia();
+					existeAlgumaTorreCheia = (torreCheia != null);
+					if (existeAlgumaTorreCheia) {
+						torreEstaOrdenada = verificarSeTorreEstaOrdenada(torreCheia);
+						if (torreEstaOrdenada) {
+							System.out.println();
+							imprimirTorres();
+							imprimirMensagemVitoria();
+							return;
+						}
+					}
+					break;
+			}
 		} while (!opcaoSelecionada.equals(opcaoMenu.SAIR));
+	}
+	
+	private void imprimirQtdJogadas() {
+		System.out.println("Quantidade de jogadas: " + qtdJogadas + ".");
+	}
+	
+	private void imprimirMensagemVitoria() {
+		System.out.println("\nVocê venceu!");
+		System.out.println("Ordenação concluída em " + qtdJogadas + " jogadas.");
+	}
+	
+	private void iniciarMovimento() {
+		System.out.println("\nSelecione a torre a desempilhar.");
+		imprimirOpcoesTorres();
+		No discoSelecionado = selecionarTorre().remover();
+		System.out.println("\nSeleciona a torre a empilhar o disco " +
+				discoSelecionado.getDado() + ".");
+		selecionarTorre().inserir(discoSelecionado);
+	}
+	
+	private boolean verificarSeTorreEstaOrdenada(PilhaDinamica torre) {
+		if (isObjetivoOrdemCrescente) {
+			return verificarSeTorreEstaCrescente(torre);
+		} else {
+			return verificarSeTorreEstaDecrescente(torre);
+		}
+	}
+	
+	private boolean verificarSeTorreEstaCrescente(PilhaDinamica torre) {
+		boolean isOrdemCrescente = true;
+		No noAtual = torre.getTopo();
+		int valorAtual;
+		int valorSeguinte;
+		while ((noAtual != null) && (noAtual.getProximoNo() != null)) {
+			valorAtual = noAtual.getDado();
+			valorSeguinte = noAtual.getProximoNo().getDado();
+			if (valorAtual > valorSeguinte) {
+				isOrdemCrescente = false;
+				break;
+			}
+			noAtual = noAtual.getProximoNo();
+		}
+		return isOrdemCrescente;
+	}
+
+	private boolean verificarSeTorreEstaDecrescente(PilhaDinamica torre) {
+		boolean isOrdemDecrescente = true;
+		No noAtual = torre.getTopo();
+		int valorAtual;
+		int valorSeguinte;
+		while ((noAtual != null) && (noAtual.getProximoNo() != null)) {
+			valorAtual = noAtual.getDado();
+			valorSeguinte = noAtual.getProximoNo().getDado();
+			if (valorAtual < valorSeguinte) {
+				isOrdemDecrescente = false;
+				break;
+			}
+			noAtual = noAtual.getProximoNo();
+		}
+		return isOrdemDecrescente;
+	}
+	
+	private PilhaDinamica buscarTorreCheia() {
+		if (torre1.getTamanho() == qtdDiscos) {
+			return torre1;
+		} else if (torre2.getTamanho() == qtdDiscos) {
+			return torre2;
+		} else if (torre3.getTamanho() == qtdDiscos) {
+			return torre3;
+		} else {
+			return null;
+		}
+	}
+	
+	private void imprimirOpcoesTorres() {
+		System.out.print((torre1.estaVazia()) ? "" : "1 - Torre 1\n");
+		System.out.print((torre2.estaVazia()) ? "" : "2 - Torre 2\n");
+		System.out.print((torre3.estaVazia()) ? "" : "3 - Torre 3\n");
+		if (torre1.estaVazia() && torre2.estaVazia() && torre3.estaVazia()) {
+			System.out.println("Não há opções para seleção de torres, pois estão todas vazias.");
+		}
+		System.out.println();
+	}
+	
+	private PilhaDinamica selecionarTorre() {
+		int numTorreEscolhida = Integer.parseInt(scanner.nextLine());
+		
+		switch (numTorreEscolhida) {
+			case 1:
+				return torre1;
+			case 2:
+				return torre2;
+			default:
+				return torre3;
+		}
 	}
 	
 	private opcaoMenu selecionarOpcao() {
@@ -60,11 +181,7 @@ public class Jogo {
 	private void imprimirOpcoesMenu() {
 		System.out.println("0 - Sair do jogo");
 		System.out.println("1 - Movimentar");
-		System.out.println("2 - Solução automática\n");
-		imprimirTorres();
-		torre1.imprimir();
-		torre2.imprimir();
-		torre3.imprimir();
+		System.out.println("2 - Solução automática");
 	}
 	
 	private void imprimirTorres() {
@@ -72,6 +189,7 @@ public class Jogo {
 		No discoTorre2 = torre2.getTopo();
 		No discoTorre3 = torre3.getTopo();
 		
+		System.out.println("---------------------------------------");
 		System.out.println("Torre 1\t\tTorre 2\t\tTorre 3\n");
 		
 		// Considere o exemplo com duas pilhas (4 -> 7) e (2):
@@ -102,6 +220,7 @@ public class Jogo {
 			}
 			System.out.println("");
 		}
+		System.out.println("---------------------------------------");
 	}
 	
 	private int obterTamanhoMaiorTorre() {

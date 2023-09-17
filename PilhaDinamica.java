@@ -16,7 +16,7 @@ public class PilhaDinamica {
 		tamanho = 0;
 	}
 	
-	private boolean pilhaEstaVazia() {
+	public boolean estaVazia() {
 		return (topo == null);
 	}
 	
@@ -27,8 +27,15 @@ public class PilhaDinamica {
 		tamanho++;
 	}
 	
+	public void inserir(No no) {
+		No antigoTopo = topo;
+		topo = no;
+		topo.setProximoNo(antigoTopo);
+		tamanho++;
+	}
+	
 	public No remover() {
-		if (pilhaEstaVazia()) {
+		if (estaVazia()) {
 			return null;
 		} else {
 			tamanho--;
