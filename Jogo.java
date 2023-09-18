@@ -157,7 +157,7 @@ public class Jogo {
 	}
 	
 	private int gerarNumeroInteiroAleatorioDeZeroA(int limiteSuperiorInclusivo) {
-		return new Random().nextInt(limiteSuperiorInclusivo + 1);
+		return new Random().nextInt(limiteSuperiorInclusivo) + 1;
 	}
 	
 	private void iniciarLoopSelecaoOpcoes() {
